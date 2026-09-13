@@ -18,18 +18,32 @@ describe('OidcTokenVerifier', () => {
         );
     });
 
-    const createToken = async (audience: string, tenantId = '550e8400-e29b-41d4-a716-446655440001') =>
+    const createToken = async (
+        audience: string,
+        tenantId = '550e8400-e29b-41d4-a716-446655440001',
+        subject = '550e8400-e29b-41d4-a716-446655440000',
+    ) =>
         new SignJWT({ tenant_id: tenantId })
             .setProtectedHeader({ alg: 'RS256', kid: 'test' })
             .setIssuer(issuer)
             .setAudience(audience)
-            .setSubject('550e8400-e29b-41d4-a716-446655440000')
+            .setSubject(subject)
             .setIssuedAt()
             .setExpirationTime('5m')
             .sign(privateKey);
 
     it('accepts a signed token for this service', async () => {
         await expect(verifier.verify(await createToken('channel-gateway'))).resolves.toBeUndefined();
+    });
+
+    it('accepts UUID values used by other platform services', async () => {
+        const token = await createToken(
+            'channel-gateway',
+            '11111111-1111-1111-1111-111111111111',
+            '22222222-2222-2222-2222-222222222222',
+        );
+
+        await expect(verifier.verify(token)).resolves.toBeUndefined();
     });
 
     it('rejects another audience', async () => {
