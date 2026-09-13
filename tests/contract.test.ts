@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
-const hash = async (path: string) =>
-    createHash('sha256')
-        .update(await readFile(path))
-        .digest('hex');
+const hash = async (path: string) => {
+    const content = (await readFile(path, 'utf8')).replace(/\r\n/g, '\n');
+    return createHash('sha256').update(content).digest('hex');
+};
 
 describe('contract snapshots', () => {
     it('uses the exact released files from bundle 2.2.0', async () => {

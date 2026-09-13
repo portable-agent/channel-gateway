@@ -5,9 +5,11 @@ export interface TokenVerifier {
     verify(token: string): Promise<void>;
 }
 
+const uuidText = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+
 const identitySchema = z.object({
-    sub: z.uuid(),
-    tenant_id: z.uuid(),
+    sub: uuidText,
+    tenant_id: uuidText,
 });
 
 export class OidcTokenVerifier implements TokenVerifier {
