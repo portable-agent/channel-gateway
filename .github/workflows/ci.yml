@@ -1,0 +1,29 @@
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches: [main]
+
+permissions:
+    contents: read
+
+jobs:
+    node:
+        uses: portable-agent/.github/.github/workflows/reusable-node.yml@ed34f26071893063cf70bcd5c784d15d6c4fb5b7
+        with:
+            node-version: '24'
+    docs:
+        uses: portable-agent/.github/.github/workflows/reusable-docs.yml@ed34f26071893063cf70bcd5c784d15d6c4fb5b7
+    security:
+        uses: portable-agent/.github/.github/workflows/reusable-security.yml@ed34f26071893063cf70bcd5c784d15d6c4fb5b7
+    container:
+        needs: [node, docs, security]
+        permissions:
+            contents: read
+            packages: write
+            id-token: write
+            attestations: write
+        uses: portable-agent/.github/.github/workflows/reusable-container.yml@ed34f26071893063cf70bcd5c784d15d6c4fb5b7
+        with:
+            image-name: channel-gateway

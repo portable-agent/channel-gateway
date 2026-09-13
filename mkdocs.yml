@@ -1,0 +1,21 @@
+site_name: Channel Gateway
+site_description: Документация единого входа каналов Portable Agent
+docs_dir: docs
+strict: true
+theme:
+    name: material
+    language: ru
+nav:
+    - Главная: index.md
+    - Архитектура: architecture.md
+    - Разработка: development.md
+    - Runbook: runbook.md
+    - Решения:
+          - Граница первого инкремента: decisions/0001-gateway-boundary.md
+markdown_extensions:
+    - admonition
+    - pymdownx.superfences:
+          custom_fences:
+              - name: mermaid
+                class: mermaid
+                format: !!python/name:pymdownx.superfences.fence_code_format

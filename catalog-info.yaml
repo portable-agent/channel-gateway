@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+    name: channel-gateway
+    description: Единый вход сообщений из независимых каналов пользователя
+    annotations:
+        github.com/project-slug: portable-agent/channel-gateway
+        backstage.io/techdocs-ref: dir:.
+        portable-agent.dev/api-contract: channel-gateway-api@2.2.0
+spec:
+    type: service
+    lifecycle: experimental
+    owner: group:default/backend
+    system: portable-agent

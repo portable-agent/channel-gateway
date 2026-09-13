@@ -1,0 +1,9 @@
+.git
+.github
+coverage
+dist
+docs
+node_modules
+site
+tests
+*.md
