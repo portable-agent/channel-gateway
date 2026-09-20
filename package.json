@@ -20,21 +20,21 @@
         "build": "pnpm typecheck && tsc -p tsconfig.json"
     },
     "dependencies": {
-        "@fastify/helmet": "13.0.2",
-        "fastify": "5.12.3",
+        "@fastify/helmet": "13.1.1",
+        "fastify": "5.12.5",
         "jose": "6.2.12",
-        "zod": "4.5.4"
+        "zod": "4.6.5"
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
-        "@types/node": "26.5.0",
-        "@vitest/coverage-v8": "5.0.0",
+        "@types/node": "26.6.1",
+        "@vitest/coverage-v8": "5.0.1",
         "eslint": "10.10.0",
         "openapi-typescript": "7.13.0",
-        "prettier": "3.9.6",
+        "prettier": "3.9.7",
         "tsx": "4.23.13",
-        "typescript": "5.9.3",
+        "typescript": "7.0.2",
         "typescript-eslint": "8.70.0",
-        "vitest": "5.0.0"
+        "vitest": "5.0.1"
     }
 }
