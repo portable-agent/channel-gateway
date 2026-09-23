@@ -13,6 +13,7 @@ $checksumPath = Join-Path $tempPath 'SHA256SUMS'
 $releaseUrl = "https://github.com/portable-agent/contracts/releases/download/v$Version"
 $files = @(
     @{ Archive = 'package/openapi/channel-gateway-api.yaml'; Target = 'contracts/channel-gateway-api.yaml'; HasVersion = $true },
+    @{ Archive = 'package/openapi/action-api.yaml'; Target = 'contracts/action-api.yaml'; HasVersion = $true },
     @{ Archive = 'package/openapi/agent-runtime-api.yaml'; Target = 'contracts/agent-runtime-api.yaml'; HasVersion = $true },
     @{ Archive = 'package/openapi/conversation-api.yaml'; Target = 'contracts/conversation-api.yaml'; HasVersion = $true },
     @{ Archive = 'package/schemas/action-confirmation.schema.json'; Target = 'schemas/action-confirmation.schema.json'; HasVersion = $false }

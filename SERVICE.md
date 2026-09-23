@@ -5,10 +5,10 @@
 | Ответственность    | Принять нормализованное сообщение канала и передать его в Conversation Service |
 | Владелец           | `portable-agent/backend`                                                       |
 | Язык               | TypeScript, Node.js 24                                                         |
-| Входящий контракт  | Channel Gateway API `2.4.0`; новый путь `/api/v1/conversations/messages`       |
-| Исходящий контракт | Conversation API `2.4.0`; старый Agent API временно сохранён                   |
+| Входящий контракт  | Channel Gateway API `2.5.0`; сообщения и решения виджетов                      |
+| Исходящий контракт | Conversation и Action API `2.5.0`; старый Agent API временно сохранён          |
 | Свои данные        | Нет постоянного хранилища; сервис stateless                                    |
-| Прямые зависимости | OIDC JWKS, Conversation Service и временно Agent Runtime                       |
+| Прямые зависимости | OIDC JWKS, Conversation Service, Action Service и временно Agent Runtime       |
 | Не отвечает за     | API мессенджера, хранение диалога, approval, workflow и выполнение действия    |
 | SLO                | Не определён до сквозного baseline-теста                                       |
 

@@ -1,7 +1,8 @@
 # Channel Gateway
 
 Единый HTTP-вход для Web, Telegram и будущих каналов Portable Agent. Сервис принимает уже
-нормализованный текст, проверяет JWT и передаёт новый диалоговый запрос в Conversation Service. Он не
+нормализованный текст, проверяет JWT и передаёт новый диалоговый запрос в Conversation Service. Команду
+из Widget SDK он передаёт в Action Service без изменения `actionId` и `payloadHash`. Gateway не
 содержит правил Telegram, календаря или подтверждения действий. Старый прямой маршрут в Agent Runtime
 временно сохранён для совместимости.
 
