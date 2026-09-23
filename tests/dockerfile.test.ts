@@ -6,7 +6,7 @@ describe('Docker build context', () => {
         const dockerfile = await readFile('Dockerfile', 'utf8');
         const ignored = (await readFile('.dockerignore', 'utf8')).split(/\r?\n/);
 
-        for (const name of ['contracts', 'src', 'tests']) {
+        for (const name of ['contracts', 'schemas', 'src', 'tests']) {
             expect(dockerfile).toContain(`COPY ${name} ./` + name);
             expect(ignored).not.toContain(name);
         }
