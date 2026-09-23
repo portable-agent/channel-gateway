@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Обработать сообщение с сохранением диалога */
+        post: operations["createConversationMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -72,6 +89,61 @@ export interface components {
             proposal: components["schemas"]["ActionPlan"] | null;
             clarification: components["schemas"]["Clarification"] | null;
         };
+        "schemas-MessageRequest": {
+            /**
+             * Format: uuid
+             * @description Отсутствует у первого сообщения и возвращается в ответе.
+             */
+            conversationId?: string;
+            requestKey: string;
+            text: string;
+            context: components["schemas"]["MessageContext"];
+        };
+        TextReply: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "text";
+            text: string;
+        };
+        /** Action confirmation widget */
+        "action-confirmation.schema": {
+            /** @constant */
+            schemaVersion: 1;
+            /** @constant */
+            widget: "action_confirmation";
+            /** Format: uuid */
+            actionId: string;
+            payloadHash: string;
+            title: string;
+            fields: {
+                label: string;
+                value: string;
+                /** @default false */
+                sensitive: boolean;
+            }[];
+            actions: {
+                /** @enum {unknown} */
+                id: "confirm" | "cancel";
+                label: string;
+            }[];
+        };
+        ConfirmationReply: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "confirmation";
+            card: components["schemas"]["action-confirmation.schema"];
+        };
+        MessageResponse: {
+            /** Format: uuid */
+            messageId: string;
+            /** Format: uuid */
+            conversationId: string;
+            reply: components["schemas"]["TextReply"] | components["schemas"]["ConfirmationReply"];
+        };
     };
     responses: never;
     parameters: never;
@@ -120,6 +192,55 @@ export interface operations {
                 };
             };
             /** @description Agent Runtime временно недоступен */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createConversationMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["schemas-MessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Вопрос для уточнения или карточка подтверждения */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description JWT отсутствует или не подходит Channel Gateway */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Запрос не соответствует контракту */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conversation Service временно недоступен */
             502: {
                 headers: {
                     [name: string]: unknown;

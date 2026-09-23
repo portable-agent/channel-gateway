@@ -13,6 +13,8 @@ const envSchema = z.object({
             return z.NEVER;
         }
     }),
+    CONVERSATION_URL: z.url().transform((url) => url.replace(/\/$/, '')),
+    CONVERSATION_TIMEOUT_MS: z.coerce.number().int().min(100).max(30_000).default(10_000),
     OIDC_ISSUER_URL: z.url(),
     OIDC_JWKS_URL: z.url(),
     OIDC_AUDIENCE: z.string().min(1).default('channel-gateway'),
@@ -24,6 +26,8 @@ export type Settings = {
     agentUrl: string;
     agentTimeoutMs: number;
     connectors: string[];
+    conversationUrl: string;
+    conversationTimeoutMs: number;
     issuer: string;
     jwksUrl: string;
     audience: string;
@@ -37,6 +41,8 @@ export const readSettings = (env: NodeJS.ProcessEnv): Settings => {
         agentUrl: value.AGENT_URL,
         agentTimeoutMs: value.AGENT_TIMEOUT_MS,
         connectors: value.AGENT_AVAILABLE_CONNECTORS,
+        conversationUrl: value.CONVERSATION_URL,
+        conversationTimeoutMs: value.CONVERSATION_TIMEOUT_MS,
         issuer: value.OIDC_ISSUER_URL,
         jwksUrl: value.OIDC_JWKS_URL,
         audience: value.OIDC_AUDIENCE,

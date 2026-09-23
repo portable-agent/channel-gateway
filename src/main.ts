@@ -1,5 +1,6 @@
 import { createRemoteJWKSet } from 'jose';
 import { HttpAgentClient } from './client/http-agent-client.js';
+import { HttpConversationClient } from './client/http-conversation-client.js';
 import { readSettings } from './config/settings.js';
 import { OidcTokenVerifier } from './config/token-verifier.js';
 import { buildApp } from './controller/app.js';
@@ -7,6 +8,7 @@ import { buildApp } from './controller/app.js';
 const settings = readSettings(process.env);
 const app = buildApp({
     client: new HttpAgentClient(settings.agentUrl, settings.agentTimeoutMs),
+    conversationClient: new HttpConversationClient(settings.conversationUrl, settings.conversationTimeoutMs),
     verifier: new OidcTokenVerifier(settings.issuer, settings.audience, createRemoteJWKSet(new URL(settings.jwksUrl))),
     connectors: settings.connectors,
     logger: true,

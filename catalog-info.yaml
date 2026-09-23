@@ -6,7 +6,7 @@ metadata:
     annotations:
         github.com/project-slug: portable-agent/channel-gateway
         backstage.io/techdocs-ref: dir:.
-        portable-agent.dev/api-contract: channel-gateway-api@2.2.0
+        portable-agent.dev/api-contract: channel-gateway-api@2.4.0
 spec:
     type: service
     lifecycle: experimental

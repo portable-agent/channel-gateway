@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Portable Agent Channel Gateway API
-  version: 2.2.0
+  version: 2.4.0
   description: Единый текстовый вход для независимых каналов пользователя.
   license:
     name: Apache-2.0
@@ -41,6 +41,40 @@ paths:
                 $ref: "#/components/schemas/Problem"
         "502":
           description: Agent Runtime временно недоступен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /api/v1/conversations/messages:
+    post:
+      tags: [messages]
+      operationId: createConversationMessage
+      summary: Обработать сообщение с сохранением диалога
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./conversation-api.yaml#/components/schemas/MessageRequest"
+      responses:
+        "200":
+          description: Вопрос для уточнения или карточка подтверждения
+          content:
+            application/json:
+              schema:
+                $ref: "./conversation-api.yaml#/components/schemas/MessageResponse"
+        "401":
+          description: JWT отсутствует или не подходит Channel Gateway
+        "422":
+          description: Запрос не соответствует контракту
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Conversation Service временно недоступен
           content:
             application/json:
               schema:

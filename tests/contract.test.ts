@@ -8,12 +8,18 @@ const hash = async (path: string) => {
 };
 
 describe('contract snapshots', () => {
-    it('uses the exact released files from bundle 2.2.0', async () => {
+    it('uses the exact files from contract bundle 2.4.0', async () => {
         await expect(hash('contracts/channel-gateway-api.yaml')).resolves.toBe(
-            'da60b04bf4b6601da85870d8ac61568bf60fa8630f546a13d873d437a78f8a94',
+            '9a6081ed2fea18776387da445ebb75a072be16bc7c6d26ca909c88fd391eed35',
         );
         await expect(hash('contracts/agent-runtime-api.yaml')).resolves.toBe(
-            '0be42b0caf0aaca5b7f0daaa881656f9d6f42ca8106e9a7a02c1333ddbe30766',
+            'a05f09df0fdf7933557d899eddfa65a8514f5561de3101e88745dadbb9b165a5',
+        );
+        await expect(hash('contracts/conversation-api.yaml')).resolves.toBe(
+            '5f3e85790f108fc55adb2d6e247a7813943351ea0bc87383ed7c47ff3f44ae8c',
+        );
+        await expect(hash('schemas/action-confirmation.schema.json')).resolves.toBe(
+            'd0352c8685c7a0a7d9a887e80c7db4209defb4da9c8596d7f4bd7981eba6b4b8',
         );
     });
 });
