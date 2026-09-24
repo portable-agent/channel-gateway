@@ -11,7 +11,14 @@ $archiveName = "portable-agent-contracts-$Version.tgz"
 $archivePath = Join-Path $tempPath $archiveName
 $checksumPath = Join-Path $tempPath 'SHA256SUMS'
 $releaseUrl = "https://github.com/portable-agent/contracts/releases/download/v$Version"
-$names = @('channel-gateway-api.yaml', 'agent-runtime-api.yaml')
+$files = @(
+    @{ Archive = 'package/openapi/channel-gateway-api.yaml'; Target = 'contracts/channel-gateway-api.yaml'; HasVersion = $true },
+    @{ Archive = 'package/openapi/action-api.yaml'; Target = 'contracts/action-api.yaml'; HasVersion = $true },
+    @{ Archive = 'package/openapi/agent-runtime-api.yaml'; Target = 'contracts/agent-runtime-api.yaml'; HasVersion = $true },
+    @{ Archive = 'package/openapi/conversation-api.yaml'; Target = 'contracts/conversation-api.yaml'; HasVersion = $true },
+    @{ Archive = 'package/schemas/action-confirmation.schema.json'; Target = 'schemas/action-confirmation.schema.json'; HasVersion = $false },
+    @{ Archive = 'package/schemas/message-context.schema.json'; Target = 'schemas/message-context.schema.json'; HasVersion = $false }
+)
 $staged = @{}
 $backups = @{}
 $replaced = @()
@@ -41,30 +48,32 @@ try {
         throw 'Cannot verify the GitHub attestation for the contract bundle.'
     }
 
-    foreach ($name in $names) {
-        & tar -xzf $archivePath -C $tempPath "package/openapi/$name"
+    foreach ($file in $files) {
+        & tar -xzf $archivePath -C $tempPath $file.Archive
         if ($LASTEXITCODE -ne 0) {
-            throw "Cannot unpack $name."
+            throw "Cannot unpack $($file.Archive)."
         }
-        $source = Join-Path $tempPath "package/openapi/$name"
-        if ((Get-Content -Raw -LiteralPath $source) -notmatch "(?m)^  version: $([regex]::Escape($Version))$") {
-            throw "$name version does not match the requested release."
+        $source = Join-Path $tempPath $file.Archive
+        if ($file.HasVersion -and
+            (Get-Content -Raw -LiteralPath $source) -notmatch "(?m)^  version: $([regex]::Escape($Version))$") {
+            throw "$($file.Archive) version does not match the requested release."
         }
-        $staged[$name] = Join-Path $repoPath "contracts/.$name.$([guid]::NewGuid()).stage"
-        $backups[$name] = Join-Path $repoPath "contracts/.$name.$([guid]::NewGuid()).backup"
-        Copy-Item -LiteralPath $source -Destination $staged[$name]
+        $target = Join-Path $repoPath $file.Target
+        $staged[$file.Target] = "$target.$([guid]::NewGuid()).stage"
+        $backups[$file.Target] = "$target.$([guid]::NewGuid()).backup"
+        Copy-Item -LiteralPath $source -Destination $staged[$file.Target]
     }
 
-    foreach ($name in $names) {
-        $target = Join-Path $repoPath "contracts/$name"
-        [System.IO.File]::Replace($staged[$name], $target, $backups[$name], $true)
-        $replaced += $name
+    foreach ($file in $files) {
+        $target = Join-Path $repoPath $file.Target
+        [System.IO.File]::Replace($staged[$file.Target], $target, $backups[$file.Target], $true)
+        $replaced += $file.Target
     }
     Write-Output "Channel Gateway contracts updated to version $Version."
 } catch {
-    foreach ($name in $replaced) {
-        if (Test-Path -LiteralPath $backups[$name]) {
-            Copy-Item -LiteralPath $backups[$name] -Destination (Join-Path $repoPath "contracts/$name") -Force
+    foreach ($target in $replaced) {
+        if (Test-Path -LiteralPath $backups[$target]) {
+            Copy-Item -LiteralPath $backups[$target] -Destination (Join-Path $repoPath $target) -Force
         }
     }
     throw

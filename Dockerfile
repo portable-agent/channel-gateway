@@ -8,6 +8,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY tsconfig.json tsconfig.test.json ./
 COPY contracts ./contracts
+COPY schemas ./schemas
 COPY src ./src
 COPY tests ./tests
 COPY vitest.config.ts ./

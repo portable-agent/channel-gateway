@@ -21,6 +21,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Обработать сообщение с сохранением диалога */
+        post: operations["createConversationMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actions/{actionId}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Подтвердить или отменить действие из канала */
+        post: operations["decideAction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -28,17 +62,19 @@ export interface components {
         MessageRequest: {
             requestKey: string;
             text: string;
-            context: components["schemas"]["MessageContext"];
+            context: components["schemas"]["message-context.schema"];
         };
-        MessageContext: {
-            locale: string;
-            timeZone: string;
-        };
+        MessageContext: components["schemas"]["message-context.schema"];
         Problem: {
             /** @description Короткое описание ошибки без внутренних данных сервиса. */
             detail: unknown;
         } & {
             [key: string]: unknown;
+        };
+        /** Message context */
+        "message-context.schema": {
+            locale: string;
+            timeZone: string;
         };
         CalendarCreateEventPayload: {
             title: string;
@@ -72,9 +108,92 @@ export interface components {
             proposal: components["schemas"]["ActionPlan"] | null;
             clarification: components["schemas"]["Clarification"] | null;
         };
+        "schemas-MessageRequest": {
+            /**
+             * Format: uuid
+             * @description Отсутствует у первого сообщения и возвращается в ответе.
+             */
+            conversationId?: string;
+            requestKey: string;
+            text: string;
+            context: components["schemas"]["message-context.schema"];
+        };
+        TextReply: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "text";
+            text: string;
+        };
+        /** Action confirmation widget */
+        "action-confirmation.schema": {
+            /** @constant */
+            schemaVersion: 1;
+            /** @constant */
+            widget: "action_confirmation";
+            /** Format: uuid */
+            actionId: string;
+            payloadHash: string;
+            title: string;
+            fields: {
+                label: string;
+                value: string;
+                /** @default false */
+                sensitive: boolean;
+            }[];
+            actions: {
+                /** @enum {unknown} */
+                id: "confirm" | "cancel";
+                label: string;
+            }[];
+        };
+        ConfirmationReply: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "confirmation";
+            card: components["schemas"]["action-confirmation.schema"];
+        };
+        MessageResponse: {
+            /** Format: uuid */
+            messageId: string;
+            /** Format: uuid */
+            conversationId: string;
+            reply: components["schemas"]["TextReply"] | components["schemas"]["ConfirmationReply"];
+        };
+        ActionDecisionRequest: {
+            /** @enum {string} */
+            decision: "CONFIRM" | "CANCEL";
+            payloadHash: string;
+        };
+        CalendarActionResult: {
+            /** @description Стабильный идентификатор события у календарного коннектора. */
+            eventId: string;
+        };
+        ActionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "PROPOSED" | "AWAITING_APPROVAL" | "APPROVED" | "EXECUTING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
+            kind: string;
+            connector: string;
+            /** @description Сохранённые данные, которые пользователь подтверждает по payloadHash. */
+            payload: components["schemas"]["CalendarCreateEventPayload"];
+            payloadHash: string;
+            /** @description Результат успешного выполнения. До состояния SUCCEEDED поле отсутствует. */
+            result?: components["schemas"]["CalendarActionResult"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
     };
     responses: never;
-    parameters: never;
+    parameters: {
+        ActionId: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -126,6 +245,115 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createConversationMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["schemas-MessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Вопрос для уточнения или карточка подтверждения */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description JWT отсутствует или не подходит Channel Gateway */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Запрос не соответствует контракту */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conversation Service временно недоступен */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    decideAction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                actionId: components["parameters"]["ActionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActionDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Решение принято Action Service */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            /** @description JWT отсутствует или не подходит Channel Gateway */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Действие уже завершено или payloadHash не совпал */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Запрос не соответствует контракту */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Action Service временно недоступен */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };

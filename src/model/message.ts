@@ -11,3 +11,6 @@ export type AgentMessage = {
 };
 
 export type ProposalResult = operations['createMessage']['responses'][200]['content']['application/json'];
+export type ConversationMessage = operations['createConversationMessage']['requestBody']['content']['application/json'];
+export type ConversationResult =
+    operations['createConversationMessage']['responses'][200]['content']['application/json'];
