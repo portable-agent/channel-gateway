@@ -22,3 +22,7 @@ pnpm build
 
 Переменные запуска описаны в `.env.example`. Краткая ответственность сервиса хранится в
 [`SERVICE.md`](SERVICE.md), устройство — в [`docs/architecture.md`](docs/architecture.md).
+
+Обычные timeout остаются короткими. Верхний предел `AGENT_TIMEOUT_MS` и
+`CONVERSATION_TIMEOUT_MS` допускает до 180 секунд только для ручного локального профиля с CPU-моделью;
+production-значения должны определяться отдельным SLO.

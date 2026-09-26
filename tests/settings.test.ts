@@ -37,4 +37,15 @@ describe('readSettings', () => {
     it('rejects invalid connector JSON', () => {
         expect(() => readSettings({ ...env, AGENT_AVAILABLE_CONNECTORS: 'fake-calendar' })).toThrow();
     });
+
+    it('accepts a long local model timeout', () => {
+        const settings = readSettings({
+            ...env,
+            AGENT_TIMEOUT_MS: '130000',
+            CONVERSATION_TIMEOUT_MS: '140000',
+        });
+
+        expect(settings.agentTimeoutMs).toBe(130000);
+        expect(settings.conversationTimeoutMs).toBe(140000);
+    });
 });
