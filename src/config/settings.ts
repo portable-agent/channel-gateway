@@ -4,7 +4,7 @@ const envSchema = z.object({
     PORT: z.coerce.number().int().min(1).max(65_535).default(8080),
     HOST: z.string().min(1).default('0.0.0.0'),
     AGENT_URL: z.url().transform((url) => url.replace(/\/$/, '')),
-    AGENT_TIMEOUT_MS: z.coerce.number().int().min(100).max(30_000).default(5000),
+    AGENT_TIMEOUT_MS: z.coerce.number().int().min(100).max(180_000).default(5000),
     AGENT_AVAILABLE_CONNECTORS: z.string().transform((value, context) => {
         try {
             return z.array(z.string().min(1)).max(100).parse(JSON.parse(value));
@@ -14,7 +14,7 @@ const envSchema = z.object({
         }
     }),
     CONVERSATION_URL: z.url().transform((url) => url.replace(/\/$/, '')),
-    CONVERSATION_TIMEOUT_MS: z.coerce.number().int().min(100).max(30_000).default(10_000),
+    CONVERSATION_TIMEOUT_MS: z.coerce.number().int().min(100).max(180_000).default(10_000),
     ACTION_URL: z.url().transform((url) => url.replace(/\/$/, '')),
     ACTION_TIMEOUT_MS: z.coerce.number().int().min(100).max(30_000).default(10_000),
     OIDC_ISSUER_URL: z.url(),
