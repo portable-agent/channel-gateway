@@ -36,6 +36,68 @@ describe('HttpConversationClient', () => {
         );
     });
 
+    it('passes a valid connection widget without changing it', async () => {
+        const result = {
+            messageId: '10000000-0000-4000-8000-000000000001',
+            conversationId: '10000000-0000-4000-8000-000000000002',
+            reply: {
+                type: 'connection',
+                card: {
+                    schemaVersion: 1,
+                    widget: 'connection',
+                    provider: 'google-calendar',
+                    title: 'Подключить Google Calendar',
+                    text: 'Подключите календарь и повторите команду.',
+                    button: { label: 'Подключить', url: 'https://accounts.google.com/oauth' },
+                },
+            },
+        };
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(result)));
+        const client = new HttpConversationClient('http://conversation:8080', 1000);
+
+        await expect(
+            client.create(
+                {
+                    requestKey: 'message:2',
+                    text: 'Создай встречу',
+                    context: { locale: 'ru-RU', timeZone: 'Europe/Moscow' },
+                },
+                'user-token',
+            ),
+        ).resolves.toEqual(result);
+    });
+
+    it('rejects a connection widget with an unsafe URL', async () => {
+        const result = {
+            messageId: '10000000-0000-4000-8000-000000000001',
+            conversationId: '10000000-0000-4000-8000-000000000002',
+            reply: {
+                type: 'connection',
+                card: {
+                    schemaVersion: 1,
+                    widget: 'connection',
+                    provider: 'google-calendar',
+                    title: 'Подключить Google Calendar',
+                    text: 'Подключите календарь.',
+                    button: { label: 'Подключить', url: 'http://unsafe.example/oauth' },
+                },
+            },
+        };
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(result)));
+        const client = new HttpConversationClient('http://conversation:8080', 1000);
+
+        await expect(
+            client.create(
+                {
+                    requestKey: 'message:3',
+                    text: 'Создай встречу',
+                    context: { locale: 'ru-RU', timeZone: 'Europe/Moscow' },
+                },
+                'user-token',
+            ),
+        ).rejects.toBeInstanceOf(ConversationError);
+    });
+
     it('hides a dependency error', async () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('private error', { status: 500 })));
         const client = new HttpConversationClient('http://conversation:8080', 1000);
