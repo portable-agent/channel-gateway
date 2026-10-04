@@ -30,6 +30,25 @@ const cardSchema = z
     })
     .strict();
 
+const connectionCardSchema = z
+    .object({
+        schemaVersion: z.literal(1),
+        widget: z.literal('connection'),
+        provider: z.literal('google-calendar'),
+        title: z.string().min(1).max(120),
+        text: z.string().min(1).max(1000),
+        button: z
+            .object({
+                label: z.string().min(1).max(80),
+                url: z
+                    .string()
+                    .url()
+                    .refine((url) => url.startsWith('https://')),
+            })
+            .strict(),
+    })
+    .strict();
+
 const resultSchema = z
     .object({
         messageId: z.uuid(),
@@ -37,6 +56,7 @@ const resultSchema = z
         reply: z.discriminatedUnion('type', [
             z.object({ type: z.literal('text'), text: z.string().min(1) }).strict(),
             z.object({ type: z.literal('confirmation'), card: cardSchema }).strict(),
+            z.object({ type: z.literal('connection'), card: connectionCardSchema }).strict(),
         ]),
     })
     .strict();
