@@ -22,7 +22,7 @@ Conversation Service хранит состояние диалога, а Action S
 идемпотентность действия. Старый `/api/v1/messages` пока вызывает Agent Runtime напрямую и будет удалён
 только в следующей major-версии.
 
-Conversation client проверяет три ответа contracts `3.1.0`: `text`, `confirmation` и `connection`.
+Conversation client проверяет три ответа contracts `4.0.0`: `text`, `confirmation` и `connection`.
 Для `connection` разрешена только HTTPS-ссылка из ответа Conversation Service. Gateway не знает
 провайдера OAuth, не обновляет ссылку и не сохраняет её.
 
