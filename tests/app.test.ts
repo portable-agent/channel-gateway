@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AgentClient } from '../src/client/agent-client.js';
 import { AgentError } from '../src/client/agent-error.js';
 import type { ActionClient } from '../src/client/action-client.js';
-import { ActionConflict, ActionError } from '../src/client/action-error.js';
+import { ActionConflict, ActionError, ActionMissing } from '../src/client/action-error.js';
 import type { ConversationClient } from '../src/client/conversation-client.js';
 import { ConversationError } from '../src/client/conversation-error.js';
 import type { TokenVerifier } from '../src/config/token-verifier.js';
@@ -41,7 +41,7 @@ describe('app', () => {
         client: AgentClient,
         verifier: TokenVerifier,
         conversationClient: ConversationClient = { create: vi.fn() },
-        actionClient: ActionClient = { decide: vi.fn() },
+        actionClient: ActionClient = { decide: vi.fn(), get: vi.fn() },
     ) => {
         const app = buildApp({ client, conversationClient, actionClient, verifier, connectors: ['fake-calendar'] });
         apps.push(app);
@@ -211,7 +211,7 @@ describe('app', () => {
         const command = { decision: 'CONFIRM' as const, payloadHash: 'a'.repeat(64) };
         const decide = vi.fn().mockResolvedValue(actionResult);
         const verifier: TokenVerifier = { verify: vi.fn().mockResolvedValue(undefined) };
-        const app = createApp({ create: vi.fn() }, verifier, undefined, { decide });
+        const app = createApp({ create: vi.fn() }, verifier, undefined, { decide, get: vi.fn() });
 
         const response = await app.inject({
             method: 'POST',
@@ -228,7 +228,7 @@ describe('app', () => {
     it('rejects an invalid widget decision', async () => {
         const decide = vi.fn();
         const verifier: TokenVerifier = { verify: vi.fn().mockResolvedValue(undefined) };
-        const app = createApp({ create: vi.fn() }, verifier, undefined, { decide });
+        const app = createApp({ create: vi.fn() }, verifier, undefined, { decide, get: vi.fn() });
 
         const response = await app.inject({
             method: 'POST',
@@ -245,7 +245,7 @@ describe('app', () => {
         [new ActionConflict(), 409],
         [new ActionError(), 502],
     ])('maps a safe action error', async (error, status) => {
-        const actionClient: ActionClient = { decide: vi.fn().mockRejectedValue(error) };
+        const actionClient: ActionClient = { decide: vi.fn().mockRejectedValue(error), get: vi.fn() };
         const verifier: TokenVerifier = { verify: vi.fn().mockResolvedValue(undefined) };
         const app = createApp({ create: vi.fn() }, verifier, undefined, actionClient);
 
@@ -258,5 +258,44 @@ describe('app', () => {
 
         expect(response.statusCode).toBe(status);
         expect(response.json()).toHaveProperty('detail');
+    });
+
+    it('returns a small action status without the saved payload', async () => {
+        const get = vi.fn().mockResolvedValue({ ...actionResult, status: 'SUCCEEDED' });
+        const verifier: TokenVerifier = { verify: vi.fn().mockResolvedValue(undefined) };
+        const app = createApp({ create: vi.fn() }, verifier, undefined, { get, decide: vi.fn() });
+
+        const response = await app.inject({
+            method: 'GET',
+            url: `/api/v1/actions/${actionResult.id}/status`,
+            headers: { authorization: 'Bearer token' },
+        });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.json()).toEqual({
+            actionId: actionResult.id,
+            status: 'SUCCEEDED',
+            kind: 'calendar.create_event',
+            title: 'Встреча',
+        });
+        expect(get).toHaveBeenCalledWith(actionResult.id, 'token');
+    });
+
+    it.each([
+        [new ActionMissing(), 404],
+        [new ActionError(), 502],
+    ])('maps an action status error', async (error, status) => {
+        const verifier: TokenVerifier = { verify: vi.fn().mockResolvedValue(undefined) };
+        const app = createApp({ create: vi.fn() }, verifier, undefined, {
+            get: vi.fn().mockRejectedValue(error),
+            decide: vi.fn(),
+        });
+
+        const response = await app.inject({
+            method: 'GET',
+            url: `/api/v1/actions/${actionResult.id}/status`,
+            headers: { authorization: 'Bearer token' },
+        });
+        expect(response.statusCode).toBe(status);
     });
 });

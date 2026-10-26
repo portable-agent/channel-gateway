@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HttpActionClient } from '../src/client/http-action-client.js';
-import { ActionConflict, ActionError } from '../src/client/action-error.js';
+import { ActionConflict, ActionError, ActionMissing } from '../src/client/action-error.js';
 
 describe('HttpActionClient', () => {
     afterEach(() => {
@@ -66,5 +66,42 @@ describe('HttpActionClient', () => {
                 'user-token',
             ),
         ).rejects.toBeInstanceOf(ActionError);
+    });
+
+    it('gets an action with the original user token', async () => {
+        const action = {
+            id: '10000000-0000-4000-8000-000000000003',
+            status: 'SUCCEEDED',
+            kind: 'calendar.create_event',
+            connector: 'google-calendar',
+            payload: {
+                title: 'Встреча',
+                startAt: '2030-09-08T12:00:00+03:00',
+                endAt: '2030-09-08T12:30:00+03:00',
+                timeZone: 'Europe/Moscow',
+            },
+            payloadHash: 'a'.repeat(64),
+            result: { eventId: 'event-1' },
+            createdAt: '2030-09-01T10:00:00Z',
+            updatedAt: '2030-09-01T10:01:00Z',
+        };
+        const fetchMock = vi.fn().mockResolvedValue(Response.json(action));
+        vi.stubGlobal('fetch', fetchMock);
+
+        await expect(new HttpActionClient('http://action:8080', 1000).get(action.id, 'user-token')).resolves.toEqual(
+            action,
+        );
+        expect(fetchMock).toHaveBeenCalledWith(
+            `http://action:8080/api/v1/actions/${action.id}`,
+            expect.objectContaining({ headers: { authorization: 'Bearer user-token' } }),
+        );
+    });
+
+    it('maps a missing action without exposing its body', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('private body', { status: 404 })));
+
+        await expect(new HttpActionClient('http://action:8080', 1000).get('action-id', 'token')).rejects.toBeInstanceOf(
+            ActionMissing,
+        );
     });
 });
