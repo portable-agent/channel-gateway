@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { AgentClient } from '../client/agent-client.js';
 import { AgentError } from '../client/agent-error.js';
 import type { ActionClient } from '../client/action-client.js';
-import { ActionConflict, ActionError } from '../client/action-error.js';
+import { ActionConflict, ActionError, ActionMissing } from '../client/action-error.js';
 import type { ConversationClient } from '../client/conversation-client.js';
 import { ConversationError } from '../client/conversation-error.js';
 import type { TokenVerifier } from '../config/token-verifier.js';
@@ -151,6 +151,35 @@ export const buildApp = ({ client, conversationClient, actionClient, verifier, c
         } catch (error) {
             if (error instanceof ActionConflict) {
                 return reply.code(409).send({ detail: 'Решение конфликтует с состоянием действия.' });
+            }
+            if (error instanceof ActionError) {
+                return reply.code(502).send({ detail: 'Action Service временно недоступен.' });
+            }
+            throw error;
+        }
+    });
+
+    app.get('/api/v1/actions/:actionId/status', async (request, reply) => {
+        const token = readToken(request.headers.authorization);
+        if (!token) {
+            return reply.code(401).send();
+        }
+        try {
+            await verifier.verify(token);
+        } catch {
+            return reply.code(401).send();
+        }
+
+        const params = actionParamsSchema.safeParse(request.params);
+        if (!params.success) {
+            return reply.code(422).send({ detail: 'Запрос не соответствует контракту.' });
+        }
+
+        try {
+            return reply.code(200).send(await actionService.getStatus(params.data.actionId, token));
+        } catch (error) {
+            if (error instanceof ActionMissing) {
+                return reply.code(404).send();
             }
             if (error instanceof ActionError) {
                 return reply.code(502).send({ detail: 'Action Service временно недоступен.' });

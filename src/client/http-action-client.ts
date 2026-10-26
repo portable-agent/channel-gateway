@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ActionResult, DecisionCommand } from '../model/action.js';
 import type { ActionClient } from './action-client.js';
-import { ActionConflict, ActionError } from './action-error.js';
+import { ActionConflict, ActionError, ActionMissing } from './action-error.js';
 
 const payloadSchema = z
     .object({
@@ -57,6 +57,27 @@ export class HttpActionClient implements ActionClient {
             return resultSchema.parse(await response.json()) as ActionResult;
         } catch (error) {
             if (error instanceof ActionConflict || error instanceof ActionError) {
+                throw error;
+            }
+            throw new ActionError();
+        }
+    }
+
+    public async get(actionId: string, token: string): Promise<ActionResult> {
+        try {
+            const response = await fetch(`${this.url}/api/v1/actions/${actionId}`, {
+                headers: { authorization: `Bearer ${token}` },
+                signal: AbortSignal.timeout(this.timeoutMs),
+            });
+            if (response.status === 404) {
+                throw new ActionMissing();
+            }
+            if (response.status !== 200) {
+                throw new ActionError();
+            }
+            return resultSchema.parse(await response.json()) as ActionResult;
+        } catch (error) {
+            if (error instanceof ActionMissing || error instanceof ActionError) {
                 throw error;
             }
             throw new ActionError();

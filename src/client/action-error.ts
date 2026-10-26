@@ -11,3 +11,10 @@ export class ActionConflict extends Error {
         this.name = 'ActionConflict';
     }
 }
+
+export class ActionMissing extends Error {
+    public constructor() {
+        super('Action was not found');
+        this.name = 'ActionMissing';
+    }
+}
